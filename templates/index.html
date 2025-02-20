@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flask Store</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <nav>
+        <a href="/">🏠 Главная</a>
+        <a href="/favorites">⭐ Избранное</a>
+    </nav>
+
+    <header class="banner">
+        <h1>Добро пожаловать в Online Store!</h1>
+    </header>    
+
+    <select id="categoryFilter">
+        <option value="all">Все категории</option>
+        <option value="Мыши">Мыши</option>
+        <option value="Клавиатуры">Клавиатуры</option>
+        <option value="Мониторы">Мониторы</option>
+        <option value="Гарнитуры">Гарнитуры</option>
+    </select>
+    
+    <label for="priceRange">Макс. цена:</label>
+    <input type="range" id="priceRange" min="0" max="50000" value="50000" step="100">
+    <span id="priceValue">50000</span> KZT
+    
+    <div class="products" id="productContainer">
+        {% for product in products %}
+        <div class="product-card">
+            <img src="{{ product.image }}" alt="{{ product.name }}">
+            <h3>{{ product.name }}</h3>
+            <p>{{ product.description }}</p>
+            <p><strong>{{ product.price }} KZT</strong></p>
+            <button onclick="addToFavorites({{ product.id }})">Добавить в избранное</button>
+            <a href="/product/{{ product.id }}">Подробнее</a>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <script>
+        document.getElementById("categoryFilter").addEventListener("change", filterProducts);
+        document.getElementById("priceRange").addEventListener("input", function () {
+            document.getElementById("priceValue").innerText = this.value;
+            filterProducts();
+        });
+    
+        function filterProducts() {
+            let category = document.getElementById("categoryFilter").value;
+            let maxPrice = document.getElementById("priceRange").value;
+    
+            fetch(`/filter_products?category=${category}&max_price=${maxPrice}`)
+                .then(response => response.json())
+                .then(data => {
+                    let container = document.getElementById("productContainer");
+                    container.innerHTML = "";
+                    data.forEach(product => {
+                        let card = `<div class="product-card">
+                            <img src="${product.image}" alt="${product.name}">
+                            <h3>${product.name}</h3>
+                            <p>${product.description}</p>
+                            <p><strong>${product.price} KZT</strong></p>
+                            <button onclick="addToFavorites(${product.id})">Добавить в избранное</button>
+                            <a href="/product/${product.id}">Подробнее</a>
+                        </div>`;
+                        container.innerHTML += card;
+                    });
+                });
+        }
+    </script>    
+
+    <script>
+        function addToFavorites(productId) {
+            let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+            if (!favorites.includes(productId)) {
+                favorites.push(productId);
+                localStorage.setItem("favorites", JSON.stringify(favorites));
+                alert("Товар добавлен в избранное!");
+            } else {
+                alert("Этот товар уже в избранном.");
+            }
+        }
+    </script>
+</body>
+</html>

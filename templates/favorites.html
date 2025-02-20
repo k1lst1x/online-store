@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Избранное</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <nav>
+        <a href="/">🏠 Главная</a>
+        <a href="/favorites">⭐ Избранное</a>
+    </nav>
+
+    <h1>Избранные товары</h1>
+    <div class="products" id="favorites-list">
+        <p>Загрузка избранного...</p>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+
+            if (favorites.length === 0) {
+                document.getElementById("favorites-list").innerHTML = "<p>Вы еще не добавили товары в избранное.</p>";
+                return;
+            }
+
+            fetch("/get_favorites", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ favorites: favorites })
+            })
+            .then(response => response.json())
+            .then(products => {
+                let container = document.getElementById("favorites-list");
+                container.innerHTML = "";
+                products.forEach(product => {
+                    let productCard = `
+                        <div class="product-card">
+                            <img src="${product.image}" alt="${product.name}">
+                            <h3>${product.name}</h3>
+                            <p>${product.description}</p>
+                            <p><strong>${product.price} KZT</strong></p>
+                            <button onclick="removeFromFavorites(${product.id})">Удалить из избранного</button>
+                        </div>
+                    `;
+                    container.innerHTML += productCard;
+                });
+            });
+        });
+
+        function removeFromFavorites(productId) {
+            let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+            favorites = favorites.filter(id => id !== productId);
+            localStorage.setItem("favorites", JSON.stringify(favorites));
+            location.reload();
+        }
+    </script>
+</body>
+</html>
