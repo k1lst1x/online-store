@@ -2,6 +2,7 @@ import os
 from flask import Flask
 from config import Config
 from app.models import db
+from app.admin import admin
 
 def create_app():
     base_dir = os.path.abspath(os.path.dirname(__file__))  
@@ -12,6 +13,7 @@ def create_app():
     app.config.from_object(Config)
 
     db.init_app(app)
+    admin.init_app(app)
 
     from app.routes import main
     app.register_blueprint(main)

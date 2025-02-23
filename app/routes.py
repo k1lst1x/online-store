@@ -1,6 +1,6 @@
 import os
 from flask import Blueprint, render_template, abort, request, jsonify
-from app.models import db, Product
+from app.models import db, Product, Feedback
 
 main = Blueprint("main", __name__)
 
@@ -72,3 +72,19 @@ def filter_products():
     ]
 
     return jsonify(product_list)
+
+@main.route("/submit_feedback", methods=["POST"])
+def submit_feedback():
+    data = request.get_json()
+    name = data.get("name")
+    email = data.get("email")
+    message = data.get("message")
+
+    if not name or not email or not message:
+        return jsonify({"success": False, "message": "Все поля обязательны!"}), 400
+
+    feedback = Feedback(name=name, email=email, message=message)
+    db.session.add(feedback)
+    db.session.commit()
+
+    return jsonify({"success": True, "message": "Спасибо за ваш отзыв!"})

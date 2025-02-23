@@ -40,6 +40,23 @@
         </div>
         {% endfor %}
     </div>
+
+    <h2>Обратная связь</h2>
+    <div class="feedback-container">
+        <form id="feedback-form">
+            <label for="name">Имя:</label>
+            <input type="text" id="name" name="name" required>
+
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
+
+            <label for="message">Сообщение:</label>
+            <textarea id="message" name="message" required></textarea>
+
+            <button type="submit">Отправить</button>
+        </form>
+        <p id="feedback-status"></p>
+    </div>
     
     <script>
         document.getElementById("categoryFilter").addEventListener("change", filterProducts);
@@ -83,6 +100,70 @@
                 alert("Этот товар уже в избранном.");
             }
         }
+    </script>
+
+    <script>
+        document.getElementById("feedback-form").addEventListener("submit", function(event) {
+            event.preventDefault();
+
+            let name = document.getElementById("name");
+            let email = document.getElementById("email");
+            let message = document.getElementById("message");
+            let statusElement = document.getElementById("feedback-status");
+
+            // Очистка статуса и ошибок
+            statusElement.innerText = "";
+            name.classList.remove("error");
+            email.classList.remove("error");
+            message.classList.remove("error");
+
+            let isValid = true;
+
+            if (!name.value.trim()) {
+                name.classList.add("error");
+                isValid = false;
+            }
+            if (!email.value.trim() || !email.value.includes("@")) {
+                email.classList.add("error");
+                isValid = false;
+            }
+            if (!message.value.trim()) {
+                message.classList.add("error");
+                isValid = false;
+            }
+
+            if (!isValid) {
+                statusElement.innerText = "Пожалуйста, заполните все поля правильно.";
+                statusElement.style.color = "red";
+                return;
+            }
+
+            // Отправка запроса
+            fetch("/submit_feedback", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    name: name.value.trim(),
+                    email: email.value.trim(),
+                    message: message.value.trim()
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    statusElement.innerText = data.message;
+                    statusElement.style.color = "green";
+                    document.getElementById("feedback-form").reset();
+                } else {
+                    statusElement.innerText = data.message;
+                    statusElement.style.color = "red";
+                }
+            })
+            .catch(error => {
+                statusElement.innerText = "Ошибка при отправке!";
+                statusElement.style.color = "red";
+            });
+        });
     </script>
 </body>
 </html>
